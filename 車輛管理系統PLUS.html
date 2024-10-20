@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>車輛管理系統</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        label, input, select, button {
+            display: block;
+            margin-top: 10px;
+            width: 100%;
+            padding: 8px;
+        }
+        button {
+            background-color: #4CAF50; /* Green */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .center {
+            text-align: center;
+        }
+        .button-small {
+            padding: 5px 10px;
+            margin-top: 0;
+            width: auto;
+            background-color: #f44336; /* Red */
+            color: white;
+            border-radius: 4px;
+        }
+        .button-small:hover {
+            background-color: #d32f2f;
+        }
+        h1 {
+            background-image: url('https://permio1.com/wp-content/uploads/flickr/49596279651_0b40518b0e_o.jpg');
+            background-size: cover;
+            background-position: center;
+            /* 添加其他樣式,如高度、內邊距、字體顏色等 */
+            height: 200px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>車輛管理系統</h1>
+    <form id="carForm">
+        <label for="brand">品牌:</label>
+        <select id="brand" required onchange="updateModels()">
+            <option value="" disabled selected>請選擇品牌</option>
+            <option value="BMW">BMW</option>
+            <option value="MINI">MINI</option>
+        </select>
+
+        <label for="model">車型:</label>
+        <select id="model" required>
+            <option value="" disabled selected>請選擇車型</option>
+            <!-- 車型選項將由JavaScript動態填充 -->
+        </select>
+
+        <label for="keyLocation">鑰匙位置:</label>
+        <select id="keyLocation" required>
+            <option value="" disabled selected>請選擇鑰匙位置</option>
+            <option value="接待鑰匙盒">接待鑰匙盒</option>
+            <option value="引電鑰匙盒">引電鑰匙盒</option>
+            <option value="快保組">快保組</option>
+            <option value="鈑噴">鈑噴</option>
+            <option value="洗車">洗車</option>
+        </select>
+
+        <label for="consultant">接待顧問:</label>
+        <select id="consultant" required>
+            <option value="" disabled selected>請選擇接待顧問</option>
+            <option value="吳孟凡">吳孟凡</option>
+            <option value="蘇俊誠">蘇俊誠</option>
+            <option value="洪聖絜">洪聖絜</option>
+            <option value="劉又瑄">劉又瑄</option>
+            <option value="郭愷維">郭愷維</option>
+            <option value="胡儀凱">胡儀凱</option>
+            <option value="黃旻晴">黃旻晴</option>
+            <option value="方宗欽">方宗欽</option>
+        </select>
+
+        <label for="licensePlate">車牌號碼:</label>
+        <input type="text" id="licensePlate" required placeholder="輸入車牌號碼">
+
+        <button type="button" onclick="addCar()">新增車輛</button>
+    </form>
+
+    <h2>已新增的車輛</h2>
+    <div style="display: flex; align-items: center; margin-bottom: 20px;">
+        <label for="searchType" style="margin-right: 10px;">搜尋類型:</label>
+        <select id="searchType" style="margin-right: 10px;">
+            <option value="brand">品牌</option>
+            <option value="model">車型</option>
+            <option value="keyLocation">鑰匙位置</option>
+            <option value="consultant">接待顧問</option>
+            <option value="licensePlate">車牌號碼</option>
+        </select>
+        <input type="text" id="search" onkeyup="searchTable()" placeholder="搜尋車輛...">
+    </div>
+
+    <table id="carTable">
+        <thead>
+            <tr>
+                <th>品牌</th>
+                <th>車型</th>
+                <th>鑰匙位置</th>
+                <th>接待顧問</th>
+                <th>車牌號碼</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 新增的車輛資料將顯示在這裡 -->
+        </tbody>
+    </table>
+
+    <div id="statistics">
+        總車輛數：<span id="totalCars">0</span>
+        當前顯示車輛數：<span id="displayedCars">0</span>
+    </div>
+
+    <script>
+        const carData = {
+            "BMW": {
+                "1系列": ["E81", "E82", "E87", "E88", "F20", "F21", "F40", "F52"],
+                "2系列": ["F22", "F23", "F45", "F46", "F44", "G42", "U06"],
+                "3系列": ["E21", "E30", "E36", "E46", "E90", "E91", "E92", "E93", "F30", "F31", "G20", "G21"],
+                "4系列": ["F32", "F33", "F36", "G22", "G23", "G26"],
+                "5系列": ["E12", "E28", "E34", "E39", "E60", "F10", "F11", "F07", "G30", "G31", "G60", "G61"],
+                "6系列": ["E24", "E63", "F06", "G32"],
+                "7系列": ["E23", "E32", "E38", "E65", "F01", "G11", "G70"],
+                "8系列": ["E31", "G14", "G15", "G16"],
+                "X1系列": ["E84", "F48", "U11"],
+                "X2系列": ["F39", "U10"],
+                "X3系列": ["E83", "F25", "G01"],
+                "X4系列": ["F26", "G02"],
+                "X5系列": ["E53", "E70", "F15", "G05"],
+                "X6系列": ["E71", "F16", "G06"],
+                "X7系列": ["G07"],
+                "M2": ["F87", "G87"],
+                "M3": ["E30", "E36", "E46", "E90", "E92", "E93", "F80", "G80", "G81"],
+                "M4": ["F82", "F83", "G82", "G83"],
+                "M5": ["E28", "E34", "E39", "E60", "E61", "F10", "F90"],
+                "M8": ["E31", "F91", "F92", "F93"],
+                "X3 M": ["F97"],
+                "X4 M": ["F98"],
+                "X5 M": ["E70", "F85", "F95"],
+                "X6 M": ["E71", "F86", "F96"],
+                "XM": ["G09"],
+                "i3": ["i01"],
+                "i8": ["i12", "i15"],
+                "iX1": ["U11 BEV"],
+                "iX2": ["U10 BEV"],
+                "iX": ["i20"],
+                "Z1": ["E30"],
+                "Z3": ["E36"],
+                "Z4": ["E85", "E86", "E89", "G29"],
+                "Z8": ["E52"]
+            },
+            "MINI": {
+                "MINI 3門車型": ["F56"],
+                "MINI 5門車型": ["F55"],
+                "MINI Clubman": ["F54"],
+                "MINI Countryman": ["R60", "F60"]
+            }
+        };
+
+        function updateModels() {
+            const brandSelect = document.getElementById('brand');
+            const modelSelect = document.getElementById('model');
+            const selectedBrand = brandSelect.value;
+
+            // 清空現有的車型選項
+            modelSelect.innerHTML = '<option value="" disabled selected>請選擇車型</option>';
+
+            // 獲取選定品牌的車型
+            const models = carData[selectedBrand];
+
+            // 添加車型選項
+            for (const series in models) {
+                const group = document.createElement('optgroup');
+                group.label = series;
+
+                models[series].forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    group.appendChild(option);
+                });
+
+                modelSelect.appendChild(group);
+            }
+        }
+
+        function updateStatistics() {
+            const table = document.getElementById('carTable');
+            const tbody = table.getElementsByTagName('tbody')[0];
+            const rows = tbody.getElementsByTagName('tr');
+            
+            let totalCars = rows.length;
+            let displayedCars = 0;
+
+            for (let i = 0; i < rows.length; i++) {
+                if (rows[i].style.display !== 'none') {
+                    displayedCars++;
+                }
+            }
+
+            document.getElementById('totalCars').textContent = totalCars;
+            document.getElementById('displayedCars').textContent = displayedCars;
+        }
+
+        function addCar() {
+            const brand = document.getElementById('brand');
+            const model = document.getElementById('model');
+            const keyLocation = document.getElementById('keyLocation');
+            const consultant = document.getElementById('consultant');
+            const licensePlate = document.getElementById('licensePlate');
+
+            // 檢查所有欄位是否已填寫
+            if (!brand.value) {
+                alert('請選擇品牌');
+                return;
+            }
+            if (!model.value) {
+                alert('請選擇車型');
+                return;
+            }
+            if (!keyLocation.value) {
+                alert('請選擇鑰匙位置');
+                return;
+            }
+            if (!consultant.value) {
+                alert('請選擇接待顧問');
+                return;
+            }
+            if (!licensePlate.value.trim()) {
+                alert('請輸入車牌號碼');
+                return;
+            }
+
+            const table = document.getElementById('carTable').getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+
+            newRow.insertCell(0).textContent = brand.value;
+            newRow.insertCell(1).textContent = model.value;
+            newRow.insertCell(2).textContent = keyLocation.value;
+            newRow.insertCell(3).textContent = consultant.value;
+            newRow.insertCell(4).textContent = licensePlate.value;
+            const actionsCell = newRow.insertCell(5);
+            actionsCell.innerHTML = `
+                <button class="edit-btn">修改</button>
+                <button class="delete-btn">刪除</button>
+            `;
+            actionsCell.classList.add('center');
+
+            // 為新添加的按鈕綁定事件
+            actionsCell.querySelector('.edit-btn').addEventListener('click', function() {
+                editRow(this);
+            });
+            actionsCell.querySelector('.delete-btn').addEventListener('click', function() {
+                deleteRow(this);
+            });
+
+            // 清空輸入框
+            document.getElementById('carForm').reset();
+            updateModels(); // 重置車型選項
+            updateStatistics(); // 在添加新行後更新統計
+        }
+
+        function editRow(button) {
+            const row = button.closest('tr');
+            const keyLocationCell = row.cells[2]; // 假設鑰匙位置在第三列
+
+            // 儲存原始數據
+            row.dataset.originalKeyLocation = keyLocationCell.textContent;
+
+            keyLocationCell.innerHTML = `<select>${getKeyLocationOptions()}</select>`;
+            keyLocationCell.querySelector('select').value = row.dataset.originalKeyLocation;
+
+            button.textContent = '保存';
+            button.onclick = function() { saveRow(this); };
+        }
+
+        function saveRow(button) {
+            if (confirm('確定要保存修改嗎？')) {
+                const row = button.closest('tr');
+                const keyLocationCell = row.cells[2];
+                
+                keyLocationCell.textContent = keyLocationCell.querySelector('select').value;
+
+                button.textContent = '修改';
+                button.onclick = function() { editRow(this); };
+            } else {
+                // 如果用戶取消，恢復原始數據
+                const row = button.closest('tr');
+                const keyLocationCell = row.cells[2];
+                keyLocationCell.textContent = row.dataset.originalKeyLocation;
+
+                button.textContent = '修改';
+                button.onclick = function() { editRow(this); };
+            }
+        }
+
+        function deleteRow(button) {
+            if (confirm('確定要刪除這條記錄嗎？')) {
+                const row = button.closest('tr');
+                row.remove();
+                updateStatistics();
+            }
+        }
+
+        function searchTable() {
+            const input = document.getElementById('search').value.toLowerCase();
+            const type = document.getElementById('searchType').value;
+            const table = document.getElementById('carTable');
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName('td');
+                let found = false;
+                switch (type) {
+                    case 'brand':
+                        found = cells[0].textContent.toLowerCase().includes(input);
+                        break;
+                    case 'model':
+                        found = cells[1].textContent.toLowerCase().includes(input);
+                        break;
+                    case 'keyLocation':
+                        found = cells[2].textContent.toLowerCase().includes(input);
+                        break;
+                    case 'consultant':
+                        found = cells[3].textContent.toLowerCase().includes(input);
+                        break;
+                }
+                rows[i].style.display = found ? "" : "none";
+            }
+
+            updateStatistics(); // 在搜索後更新統計
+        }
+
+        // 初始化時更新車型選項
+        updateModels();
+
+        // 在頁面加載時初始化統計
+        window.onload = function() {
+            updateStatistics();
+        };
+
+        function getKeyLocationOptions() {
+            const locations = ['接待鑰匙盒', '引電鑰匙盒', '快保組', '鈑噴', '洗車'];
+            return locations.map(location => `<option value="${location}">${location}</option>`).join('');
+        }
+
+        // 為現有的按鈕綁定事件（如果有的話）
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    editRow(this);
+                });
+            });
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    deleteRow(this);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
